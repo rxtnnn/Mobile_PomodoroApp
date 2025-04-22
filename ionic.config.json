@@ -1,0 +1,7 @@
+{
+  "name": "localApp",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

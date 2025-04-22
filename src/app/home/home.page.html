@@ -1,0 +1,17 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>In-App Notifications v2.0</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div>
+    <p>Current Time in Default Timezone: {{ currentTime }}</p>
+  </div>
+  <ion-button expand="block" (click)="checkPermissions()">Check Permissions</ion-button>
+  <ion-button expand="block" (click)="requestPermissions()">Request Permissions</ion-button>
+  <ion-button expand="block" (click)="createNotification()">Create Notification</ion-button>
+  <ion-button expand="block" (click)="viewPendingNotifications()">View Pending Notifications</ion-button>
+  <ion-button expand="block" (click)="updateNotification()">Update Notification</ion-button>
+  <ion-button expand="block" (click)="deleteNotification()">Delete Notification</ion-button>
+</ion-content>
