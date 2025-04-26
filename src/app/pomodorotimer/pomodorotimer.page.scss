@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+*{
+  font-family: 'Poppins', sans-serif;
+}
+
+ion-content {
+  --background: url('../../assets/bg-wallpaper.png') no-repeat center center / cover;
+}
+
+.pomodoro-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.app-header {
+  width: 100%;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.app-title {
+  text-align: center;
+  width: 100%;
+
+  h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0;
+    color: white;
+  }
+
+  .quote {
+    font-style: italic;
+    font-size: 0.9rem;
+    color: white;
+    margin-top: 5px;
+  }
+}
+
+.current-time {
+  font-size: 1rem;
+  color: var(--ion-color-medium);
+  margin-top: 10px;
+  text-align: center;
+}
+
+.middle-section {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  padding: 20px 0;
+}
+
+.timer-circle {
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  background-color: rgba(var(--ion-color-dark-rgb), 0.1);
+  border: 4px solid var(--ion-color-dark);
+  transition: all 0.3s ease;
+
+  .timer-display {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--ion-color-dark);
+  }
+}
+
+.control-section {
+  flex: 0 0 auto;
+  width: 100%;
+  padding-bottom: 20px;
+}
+
+.control-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  .main-button {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    --padding-start: 0;
+    --padding-end: 0;
+
+    ion-icon {
+      font-size: 32px;
+    }
+  }
+
+  ion-button {
+    color: black;
+    background-color: rgb(255 , 255, 255, 0.5);
+
+    &:active {
+      --color: black;
+      background-color: rgb(255 , 255, 255, 0.5);
+    }
+  }
+}
+
+@media (min-height: 700px) {
+  .pomodoro-container {
+    justify-content: space-around;
+  }
+
+  .middle-section {
+    flex: 2 0 auto;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.timer-circle.work, .timer-circle.break {
+  animation: pulse 2s infinite;
+}
+.timer-circle.work:not(.running), .timer-circle.break:not(.running) {
+  animation: none;
+}

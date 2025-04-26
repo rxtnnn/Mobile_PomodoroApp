@@ -3,7 +3,7 @@ import { IonRouterOutlet, Platform } from '@ionic/angular';
 import { App } from '@capacitor/app';
 import { NotificationService } from '../services/notification.service';
 import { getDefaultTimezone, formatDateInTimezone } from '../utils/timezone-util';
-
+import { NavController } from '@ionic/angular';
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
@@ -17,7 +17,8 @@ export class HomePage implements OnInit {
     this.notificationService.listenForIncomingNotifications();
   }
 
-  constructor(private platform: Platform,   private notificationService: NotificationService,  private routerOutlet: IonRouterOutlet) {
+  constructor(private platform: Platform,   private notificationService: NotificationService,
+    private routerOutlet: IonRouterOutlet,  private navCtrl: NavController) {
       setInterval(() => { this.updateCurrentTime() },1000);
 
       this.platform.backButton.subscribeWithPriority(-1, () => {
@@ -28,7 +29,9 @@ export class HomePage implements OnInit {
       });
 
   }
-
+  goToPomodoro() {
+    this.navCtrl.navigateRoot('/pomodorotimer');
+  }
   updateCurrentTime() {
     const now = new Date();
     const defaultTimezone = getDefaultTimezone(); // Replace with your default timezone
@@ -58,10 +61,10 @@ export class HomePage implements OnInit {
       body: 'You have a meeting in 10 minutes!',
       id: 1,
       schedule: { at: new Date(new Date().getTime() + 60 * 1000) }, // 1 minute from now
-      sound: null,
-      attachments: null,
+      sound: undefined,
+      attachments: undefined,
       actionTypeId: '',
-      extra: null,
+      extra: undefined,
     };
     await this.notificationService.scheduleNotification(notification);
   }
@@ -77,10 +80,10 @@ export class HomePage implements OnInit {
       body: 'Your meeting has been rescheduled.',
       id: 1,
       schedule: { at: new Date(new Date().getTime() + 120 * 1000) }, // 2 minutes from now
-      sound: null,
-      attachments: null,
+      sound: undefined,
+      attachments: undefined,
       actionTypeId: '',
-      extra: null,
+      extra: undefined,
     };
     await this.notificationService.updateNotification(1, updatedNotification);
   }
