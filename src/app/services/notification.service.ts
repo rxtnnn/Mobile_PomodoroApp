@@ -57,8 +57,6 @@ export class NotificationService {
     await LocalNotifications.cancel({ notifications: [{ id }] });
     console.log(`Notification with ID ${id} canceled.`);
   }
-
-
     // Listen for incoming notifications
     listenForIncomingNotifications() {
       LocalNotifications.addListener('localNotificationReceived', (notification) => {

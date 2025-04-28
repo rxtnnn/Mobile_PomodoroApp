@@ -1,3 +1,13 @@
-<ion-app>
-  <ion-router-outlet></ion-router-outlet>
-</ion-app>
+<ion-tabs>
+  <ion-tab-bar slot="bottom">
+    <ion-tab-button tab="Pomodoro" [routerLink]="['/pomodorotimer']">
+      <ion-icon name="location-outline"></ion-icon>
+      <ion-label>Pomodoro</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button tab="home" [routerLink]="['/home']">
+      <ion-icon name="settings-outline"></ion-icon>
+      <ion-label>Settings</ion-label>
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-tabs>

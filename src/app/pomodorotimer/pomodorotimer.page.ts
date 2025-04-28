@@ -28,10 +28,7 @@ export class PomodorotimerPage implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private routerOutlet: IonRouterOutlet
   ) {
-    // Update current time every second
     setInterval(() => { this.updateCurrentTime() }, 1000);
-
-    // Handle back button
     this.platform.backButton.subscribeWithPriority(-1, () => {
       if (!this.routerOutlet.canGoBack()) {
         App.exitApp();
@@ -40,10 +37,8 @@ export class PomodorotimerPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // Initialize notifications
     this.setupNotifications();
 
-    // Subscribe to timer updates
     this.timerStateSubscription = this.timerService.getTimerState().subscribe(state => {
       this.timerState = state;
       console.log('Timer state updated:', state);
@@ -53,7 +48,6 @@ export class PomodorotimerPage implements OnInit, OnDestroy {
       this.timerDisplay = this.timerService.formatTimeRemaining(timeMs);
     });
 
-    // Subscribe to running state
     this.isRunningSubscription = this.timerService.getIsRunning().subscribe(running => {
       this.isRunning = running;
       console.log('Timer running state updated:', running);
@@ -61,7 +55,6 @@ export class PomodorotimerPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // Clean up subscriptions
     if (this.timerStateSubscription) {
       this.timerStateSubscription.unsubscribe();
     }
@@ -82,13 +75,11 @@ export class PomodorotimerPage implements OnInit, OnDestroy {
   }
 
   async setupNotifications() {
-    // Check and request permissions if needed
     const permissions = await this.notificationService.checkNotificationPermissions();
     if (permissions.display !== 'granted') {
       await this.notificationService.requestNotificationPermissions();
     }
 
-    // Listen for notifications
     this.notificationService.listenForIncomingNotifications();
   }
 
@@ -97,8 +88,6 @@ export class PomodorotimerPage implements OnInit, OnDestroy {
     this.timerService.toggleTimer();
   }
 
-
-  // Helper methods to determine UI state
   isWorkSession(): boolean {
     return this.timerState === TimerState.WORK;
   }

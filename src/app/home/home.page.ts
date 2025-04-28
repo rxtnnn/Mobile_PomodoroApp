@@ -29,12 +29,10 @@ export class HomePage implements OnInit {
       });
 
   }
-  goToPomodoro() {
-    this.navCtrl.navigateRoot('/pomodorotimer');
-  }
+
   updateCurrentTime() {
     const now = new Date();
-    const defaultTimezone = getDefaultTimezone(); // Replace with your default timezone
+    const defaultTimezone = getDefaultTimezone();
     this.currentTime = formatDateInTimezone(now, defaultTimezone);
   }
 

@@ -15,19 +15,15 @@ export enum TimerState {
   providedIn: 'root',
 })
 export class TimerService {
-  // Timer constants
-  private readonly WORK_TIME_MS = 1 * 60 * 1000; // 25 minutes
-  private readonly BREAK_TIME_MS = 1 * 60 * 1000; // 5 minutes
+  private readonly WORK_TIME_MS = 1 * 60 * 1000;
+  private readonly BREAK_TIME_MS = 1 * 60 * 1000;
 
-  // Timer state
   private timerState = new BehaviorSubject<TimerState>(TimerState.IDLE);
   private timeRemaining = new BehaviorSubject<number>(this.WORK_TIME_MS);
   private isRunning = new BehaviorSubject<boolean>(false);
   private timerId: any = null;
   private endTime: number = 0;
   private pausedTimeRemaining: number = 0;
-
-  // Notification IDs
   private readonly WORK_END_NOTIFICATION_ID = 1;
   private readonly BREAK_END_NOTIFICATION_ID = 2;
 
@@ -50,40 +46,22 @@ export class TimerService {
   }
 
   startWorkSession() {
-    // Clear any existing timer
     this.clearTimer();
-
-    // Set state to work
     this.timerState.next(TimerState.WORK);
-
-    // Set time remaining to work time
     this.timeRemaining.next(this.WORK_TIME_MS);
     this.pausedTimeRemaining = this.WORK_TIME_MS;
-
-    // Calculate end time
     this.endTime = Date.now() + this.WORK_TIME_MS;
-
-    // Start timer
     this.startTimer();
 
     console.log('Work session started, duration:', this.formatTimeRemaining(this.WORK_TIME_MS));
   }
 
   startBreakSession() {
-    // Clear any existing timer
     this.clearTimer();
-
-    // Set state to break
     this.timerState.next(TimerState.BREAK);
-
-    // Set time remaining to break time
     this.timeRemaining.next(this.BREAK_TIME_MS);
     this.pausedTimeRemaining = this.BREAK_TIME_MS;
-
-    // Calculate end time
     this.endTime = Date.now() + this.BREAK_TIME_MS;
-
-    // Start timer
     this.startTimer();
 
     console.log('Break session started, duration:', this.formatTimeRemaining(this.BREAK_TIME_MS));
@@ -91,14 +69,9 @@ export class TimerService {
 
   pauseTimer() {
     if (this.timerId) {
-      // Store the current time remaining
       this.pausedTimeRemaining = this.timeRemaining.value;
-
-      // Clear the interval
       clearInterval(this.timerId);
       this.timerId = null;
-
-      // Update running state
       this.isRunning.next(false);
 
       console.log('Timer paused with remaining time:', this.formatTimeRemaining(this.pausedTimeRemaining));
@@ -107,10 +80,7 @@ export class TimerService {
 
   resumeTimer() {
     if (!this.timerId && this.timerState.value !== TimerState.IDLE) {
-      // Calculate new end time based on pausedTimeRemaining
       this.endTime = Date.now() + this.pausedTimeRemaining;
-
-      // Start the timer
       this.startTimer();
 
       console.log('Timer resumed with remaining time:', this.formatTimeRemaining(this.pausedTimeRemaining));
@@ -144,16 +114,12 @@ export class TimerService {
   }
 
   private startTimer() {
-    // Set running state to true
     this.isRunning.next(true);
 
-    // Start updating the timer every 100ms
     this.timerId = setInterval(() => {
       const remaining = Math.max(0, this.endTime - Date.now());
       this.timeRemaining.next(remaining);
       this.pausedTimeRemaining = remaining;
-
-      // Check if timer is done
       if (remaining <= 0) {
         this.handleTimerComplete();
       }
@@ -165,8 +131,6 @@ export class TimerService {
   private async handleTimerComplete() {
     console.log('Timer complete, current state:', this.timerState.value);
     this.clearTimer();
-
-    // DIRECT APPROACH: Use navigator.vibrate without any checks
     try {
       await Haptics.vibrate();
       console.log('Capacitor Haptics vibration triggered');
@@ -174,14 +138,11 @@ export class TimerService {
       console.error('Haptics vibration failed:', e);
     }
 
-    // Rest of your function...
     if (this.timerState.value === TimerState.WORK) {
-      // Work session completed
       await this.showCompletionToast('Work session completed! Time for a break.');
       this.scheduleWorkEndNotification();
       this.startBreakSession();
     } else if (this.timerState.value === TimerState.BREAK) {
-      // Break session completed
       await this.showCompletionToast('Break completed! Ready for another session?');
       this.scheduleBreakEndNotification();
       this.resetTimer();
@@ -197,7 +158,6 @@ export class TimerService {
   }
 
   private async showCompletionToast(message: string) {
-    // Show a toast
     try {
       const toast = await this.toastController.create({
         message: message,
