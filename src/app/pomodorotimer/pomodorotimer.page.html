@@ -1,14 +1,19 @@
 <ion-content class="ion-padding">
   <div class="pomodoro-container">
+    <div class="current-time">
+      {{ currentTime }}
+    </div>
     <!-- App title -->
     <div class="app-title">
       <h1>flocus</h1>
       <p class="quote">"When you feel like quitting, think<br>about why you started"</p>
     </div>
 
-    <!-- Current time display -->
-    <div class="current-time">
-      {{ currentTime }}
+    <!-- Timer status indicator -->
+    <div class="timer-status" *ngIf="timerState !== 'idle'">
+      <div class="status-badge" [ngClass]="{'work-badge': isWorkSession(), 'break-badge': isBreakSession()}">
+        {{ isWorkSession() ? '' : 'BREAK TIME' }}
+      </div>
     </div>
 
     <!-- Timer circle -->
@@ -25,7 +30,7 @@
     <!-- Control button with reset instead of pause -->
     <div class="control-button">
       <ion-button fill="clear" (click)="toggleTimer()">
-        <ion-icon [name]="getButtonIcon()" size="large"></ion-icon>
+        <ion-icon [name]="getButtonIcon()" size="large" color="white"></ion-icon>
       </ion-button>
     </div>
   </div>

@@ -1,16 +1,51 @@
 import { Injectable } from '@angular/core';
 import { LocalNotifications, PermissionStatus, LocalNotificationSchema, ScheduleResult } from '@capacitor/local-notifications';
-import { ToastController } from '@ionic/angular';
+import { ToastController, Platform } from '@ionic/angular';
 import { getDefaultTimezone, formatDateInTimezone } from '../utils/timezone-util';
 
 @Injectable({
   providedIn: 'root',
 })
 export class NotificationService {
-  constructor(private toastController: ToastController) {}
-
   defaultTimeZone: string = '';
 
+  constructor(
+    private toastController: ToastController,
+    private platform: Platform
+  ) {
+    // Initialize when the service is created
+    this.initializeNotifications();
+  }
+
+  private async initializeNotifications() {
+    // Wait for the platform to be ready
+    await this.platform.ready();
+
+    // Request permissions on startup
+    await this.requestNotificationPermissions();
+
+    // Create notification channel for Android
+    if (this.platform.is('android')) {
+      try {
+        await LocalNotifications.createChannel({
+          id: 'pomodoro-notifications',
+          name: 'Pomodoro Timer',
+          description: 'Notifications for Pomodoro Timer app',
+          importance: 5, // High importance enables sound and vibration
+          visibility: 1,
+          lights: true,
+          lightColor: '#FF0000',
+          sound: 'notification.wav'
+        });
+        console.log('Notification channel created successfully');
+      } catch (error) {
+        console.error('Error creating notification channel:', error);
+      }
+    }
+
+    // Set up notification listeners
+    this.listenForIncomingNotifications();
+  }
 
   // Check notification permissions
   async checkNotificationPermissions(): Promise<PermissionStatus> {
@@ -30,12 +65,30 @@ export class NotificationService {
   async scheduleNotification(notification: LocalNotificationSchema) {
     this.defaultTimeZone = getDefaultTimezone();
 
+    // Ensure permissions are granted
+    const permissions = await this.checkNotificationPermissions();
+    if (permissions.display !== 'granted') {
+      console.log('Notification permissions not granted. Requesting...');
+      await this.requestNotificationPermissions();
+    }
 
+    // For Android, make sure to set the channelId
+    if (this.platform.is('android')) {
+      notification = {
+        ...notification,
+        channelId: 'pomodoro-notifications',
+        sound: 'notification.wav'
+      };
+    }
 
-    await LocalNotifications.schedule({
-      notifications: [notification],
-    });
-    console.log('Notification scheduled:', notification);
+    try {
+      await LocalNotifications.schedule({
+        notifications: [notification],
+      });
+      console.log('Notification scheduled:', notification);
+    } catch (error) {
+      console.error('Error scheduling notification:', error);
+    }
   }
 
   // Read all pending notifications
@@ -57,40 +110,30 @@ export class NotificationService {
     await LocalNotifications.cancel({ notifications: [{ id }] });
     console.log(`Notification with ID ${id} canceled.`);
   }
-    // Listen for incoming notifications
-    listenForIncomingNotifications() {
-      LocalNotifications.addListener('localNotificationReceived', (notification) => {
-        console.log('Notification received:', notification);
-        this.displayInAppNotification(notification);
-      });
-    }
 
-    // Display in-app notification (e.g., toast or custom overlay)
-    // private displayInAppNotification(notification: any) {
-    //   const toast = document.createElement('div');
-    //   toast.className = 'custom-notification';
-    //   toast.innerHTML = `
-    //     <div class="notification-content">
-    //       <strong>${notification.title}</strong>
-    //       <p>${notification.body}</p>
-    //     </div>
-    //   `;
-    //   document.body.appendChild(toast);
+  // Listen for incoming notifications
+  listenForIncomingNotifications() {
+    LocalNotifications.addListener('localNotificationReceived', (notification) => {
+      console.log('Notification received:', notification);
+      this.displayInAppNotification(notification);
+    });
+  }
 
-      // Remove the notification after 5 seconds
-    //   setTimeout(() => {
-    //     toast.remove();
-    //   }, 5000);
-    // }
-
-    async displayInAppNotification(notification: any) {
-      const toast = await this.toastController.create({
-        header: notification.title,
-        message: notification.body,
-        position: 'top',
-        duration: 5000,
-        color: 'dark',
-      });
-      await toast.present();
-    }
+  async displayInAppNotification(notification: any) {
+    const toast = await this.toastController.create({
+      header: notification.title,
+      message: notification.body,
+      position: 'top',
+      duration: 5000,
+      color: 'dark',
+      cssClass: 'notification-toast',
+      buttons: [
+        {
+          text: 'OK',
+          role: 'cancel'
+        }
+      ]
+    });
+    await toast.present();
+  }
 }

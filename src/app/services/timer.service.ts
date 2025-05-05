@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { NotificationService } from './notification.service';
 import { Platform } from '@ionic/angular';
 import { ToastController } from '@ionic/angular';
-import { Haptics } from '@capacitor/haptics';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 export enum TimerState {
   IDLE = 'idle',
@@ -105,21 +105,50 @@ export class TimerService {
   private async handleTimerComplete() {
     console.log('Timer complete, current state:', this.timerState.value);
     this.clearTimer();
-    try {
-      await Haptics.vibrate();
-      console.log('Capacitor Haptics vibration triggered');
-    } catch (e) {
-      console.error('Haptics vibration failed:', e);
-    }
+
+    // Enhanced vibration with multiple approaches for better reliability
+    await this.triggerVibration();
 
     if (this.timerState.value === TimerState.WORK) {
       await this.showCompletionToast('Work session completed! Time for a break.');
       this.scheduleWorkEndNotification();
       this.startBreakSession();
     } else if (this.timerState.value === TimerState.BREAK) {
-      await this.showCompletionToast('Break completed! Ready for another session?');
+      await this.showCompletionToast('Break completed! Session finished.');
       this.scheduleBreakEndNotification();
+      // Changed: Instead of starting a new work session, just reset to IDLE state
       this.resetTimer();
+    }
+  }
+
+  // Separated vibration logic for better organization
+  private async triggerVibration() {
+    try {
+      // Try stronger vibration first
+      await Haptics.impact({ style: ImpactStyle.Heavy });
+      console.log('Haptics impact vibration triggered');
+
+      // Then try standard vibration after a short delay
+      setTimeout(async () => {
+        try {
+          await Haptics.vibrate();
+          console.log('Standard haptics vibration triggered');
+        } catch (err) {
+          console.error('Standard vibration failed:', err);
+        }
+      }, 300);
+    } catch (e) {
+      console.error('Impact vibration failed:', e);
+
+      // Try with navigator.vibrate as fallback
+      try {
+        if (navigator && navigator.vibrate) {
+          navigator.vibrate([200, 100, 200]);
+          console.log('Navigator vibration triggered');
+        }
+      } catch (navError) {
+        console.error('Navigator vibration failed:', navError);
+      }
     }
   }
 
@@ -160,10 +189,8 @@ export class TimerService {
         title: 'Pomodoro Completed',
         body: 'Time for a 5-minute break!',
         schedule: { at: new Date() },
-        sound: 'notification.wav', // Changed from boolean to string
-        attachments: undefined,
-        actionTypeId: '',
-        extra: undefined,
+        sound: 'notification.wav'
+        // Removed undefined properties to reduce potential errors
       };
       this.notificationService.scheduleNotification(notification);
       console.log('Work end notification scheduled');
@@ -177,12 +204,10 @@ export class TimerService {
       const notification = {
         id: this.BREAK_END_NOTIFICATION_ID,
         title: 'Break Completed',
-        body: 'Ready for another Pomodoro session?',
+        body: 'Pomodoro session finished.',
         schedule: { at: new Date() },
-        sound: 'notification.wav', // Changed from boolean to string
-        attachments: undefined,
-        actionTypeId: '',
-        extra: undefined,
+        sound: 'notification.wav'
+        // Removed undefined properties to reduce potential errors
       };
       this.notificationService.scheduleNotification(notification);
       console.log('Break end notification scheduled');

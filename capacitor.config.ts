@@ -5,9 +5,19 @@ const config: CapacitorConfig = {
   appName: 'pomodoroApp',
   webDir: 'www',
   plugins: {
-    Permissions: {
-      vibrate: true
+    LocalNotifications: {
+      smallIcon: "ic_stat_notification",
+      iconColor: "#FF0000",
+      sound: "notification.wav",
+    },
+    Haptics: {
+      impact: {
+        style: "heavy"
+      }
     }
+  },
+  server: {
+    androidScheme: "https"
   }
 };
 
