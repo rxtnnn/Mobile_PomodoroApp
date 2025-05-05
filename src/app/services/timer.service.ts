@@ -23,7 +23,6 @@ export class TimerService {
   private isRunning = new BehaviorSubject<boolean>(false);
   private timerId: any = null;
   private endTime: number = 0;
-  private pausedTimeRemaining: number = 0;
   private readonly WORK_END_NOTIFICATION_ID = 1;
   private readonly BREAK_END_NOTIFICATION_ID = 2;
 
@@ -49,7 +48,6 @@ export class TimerService {
     this.clearTimer();
     this.timerState.next(TimerState.WORK);
     this.timeRemaining.next(this.WORK_TIME_MS);
-    this.pausedTimeRemaining = this.WORK_TIME_MS;
     this.endTime = Date.now() + this.WORK_TIME_MS;
     this.startTimer();
 
@@ -60,38 +58,17 @@ export class TimerService {
     this.clearTimer();
     this.timerState.next(TimerState.BREAK);
     this.timeRemaining.next(this.BREAK_TIME_MS);
-    this.pausedTimeRemaining = this.BREAK_TIME_MS;
     this.endTime = Date.now() + this.BREAK_TIME_MS;
     this.startTimer();
 
     console.log('Break session started, duration:', this.formatTimeRemaining(this.BREAK_TIME_MS));
   }
 
-  pauseTimer() {
-    if (this.timerId) {
-      this.pausedTimeRemaining = this.timeRemaining.value;
-      clearInterval(this.timerId);
-      this.timerId = null;
-      this.isRunning.next(false);
-
-      console.log('Timer paused with remaining time:', this.formatTimeRemaining(this.pausedTimeRemaining));
-    }
-  }
-
-  resumeTimer() {
-    if (!this.timerId && this.timerState.value !== TimerState.IDLE) {
-      this.endTime = Date.now() + this.pausedTimeRemaining;
-      this.startTimer();
-
-      console.log('Timer resumed with remaining time:', this.formatTimeRemaining(this.pausedTimeRemaining));
-    }
-  }
-
+  // Reset timer back to initial state
   resetTimer() {
     this.clearTimer();
     this.timerState.next(TimerState.IDLE);
     this.timeRemaining.next(this.WORK_TIME_MS);
-    this.pausedTimeRemaining = this.WORK_TIME_MS;
     this.isRunning.next(false);
     console.log('Timer reset');
   }
@@ -104,12 +81,10 @@ export class TimerService {
     if (this.timerState.value === TimerState.IDLE) {
       console.log('Starting work session');
       this.startWorkSession();
-    } else if (this.isRunning.value) {
-      console.log('Pausing timer');
-      this.pauseTimer();
     } else {
-      console.log('Resuming timer');
-      this.resumeTimer();
+      // Instead of pause/resume logic, we now just reset
+      console.log('Resetting timer');
+      this.resetTimer();
     }
   }
 
@@ -119,7 +94,6 @@ export class TimerService {
     this.timerId = setInterval(() => {
       const remaining = Math.max(0, this.endTime - Date.now());
       this.timeRemaining.next(remaining);
-      this.pausedTimeRemaining = remaining;
       if (remaining <= 0) {
         this.handleTimerComplete();
       }
@@ -148,6 +122,7 @@ export class TimerService {
       this.resetTimer();
     }
   }
+
   private clearTimer() {
     if (this.timerId) {
       clearInterval(this.timerId);
@@ -185,7 +160,7 @@ export class TimerService {
         title: 'Pomodoro Completed',
         body: 'Time for a 5-minute break!',
         schedule: { at: new Date() },
-        sound: undefined, // Change from true to undefined or a string
+        sound: 'notification.wav', // Changed from boolean to string
         attachments: undefined,
         actionTypeId: '',
         extra: undefined,
@@ -204,7 +179,7 @@ export class TimerService {
         title: 'Break Completed',
         body: 'Ready for another Pomodoro session?',
         schedule: { at: new Date() },
-        sound: undefined, // Change from true to undefined or a string
+        sound: 'notification.wav', // Changed from boolean to string
         attachments: undefined,
         actionTypeId: '',
         extra: undefined,

@@ -6,14 +6,25 @@
       <p class="quote">"When you feel like quitting, think<br>about why you started"</p>
     </div>
 
-    <div class="timer-circle" [ngClass]="{'work': isWorkSession(), 'break': isBreakSession(), 'running': isRunning}">
+    <!-- Current time display -->
+    <div class="current-time">
+      {{ currentTime }}
+    </div>
+
+    <!-- Timer circle -->
+    <div class="timer-circle" [ngClass]="{
+      'work': isWorkSession(),
+      'break': isBreakSession(),
+      'idle': !isRunning && timerState === 'idle'
+    }">
       <div class="timer-display">
         {{ timerDisplay }}
       </div>
     </div>
 
-    <div class="control-buttons">
-      <ion-button (click)="toggleTimer()" fill="clear" class="main-button">
+    <!-- Control button with reset instead of pause -->
+    <div class="control-button">
+      <ion-button fill="clear" (click)="toggleTimer()">
         <ion-icon [name]="getButtonIcon()" size="large"></ion-icon>
       </ion-button>
     </div>

@@ -97,6 +97,7 @@ export class PomodorotimerPage implements OnInit, OnDestroy {
   }
 
   getButtonIcon(): string {
-    return this.isRunning ? 'pause' : 'play';
+    // Changed from pause to refresh for resetting the timer
+    return this.isRunning ? 'refresh' : 'play';
   }
 }
