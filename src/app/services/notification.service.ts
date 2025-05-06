@@ -1,122 +1,136 @@
 import { Injectable } from '@angular/core';
-import { LocalNotifications, PermissionStatus, LocalNotificationSchema, ScheduleResult } from '@capacitor/local-notifications';
+import {
+  LocalNotifications,
+  PermissionStatus,
+  LocalNotificationSchema,
+  ScheduleResult,
+  Channel
+} from '@capacitor/local-notifications';
 import { ToastController, Platform } from '@ionic/angular';
-import { getDefaultTimezone, formatDateInTimezone } from '../utils/timezone-util';
+import { Haptics } from '@capacitor/haptics';
 
 @Injectable({
   providedIn: 'root',
 })
 export class NotificationService {
-  defaultTimeZone: string = '';
+  private readonly CHANNEL_ID = 'pomodoro-notifications-' + new Date().getTime();
 
   constructor(
     private toastController: ToastController,
     private platform: Platform
   ) {
-    // Initialize when the service is created
     this.initializeNotifications();
   }
 
   private async initializeNotifications() {
-    // Wait for the platform to be ready
     await this.platform.ready();
-
-    // Request permissions on startup
     await this.requestNotificationPermissions();
 
-    // Create notification channel for Android
     if (this.platform.is('android')) {
       try {
-        await LocalNotifications.createChannel({
-          id: 'pomodoro-notifications',
-          name: 'Pomodoro Timer',
-          description: 'Notifications for Pomodoro Timer app',
-          importance: 5, // High importance enables sound and vibration
+        const { channels } = await LocalNotifications.listChannels();
+        for (const ch of channels) {
+          if (ch.id.startsWith('pomodoro-notifications')) {
+            await LocalNotifications.deleteChannel({ id: ch.id });
+          }
+        }
+
+        const channel: Channel = {
+          id: this.CHANNEL_ID,
+          name: 'Pomodoro Timer Alerts',
+          description: 'Notifications for Pomodoro Timer completions',
+          importance: 5,
           visibility: 1,
+          vibration: true,
           lights: true,
-          lightColor: '#FF0000',
-          sound: 'notification.wav'
-        });
-        console.log('Notification channel created successfully');
-      } catch (error) {
-        console.error('Error creating notification channel:', error);
+          lightColor: '#FF0000'
+        };
+
+        await LocalNotifications.createChannel(channel);
+      } catch (err) {
+        console.error('Error setting up Android channel:', err);
       }
     }
-
-    // Set up notification listeners
     this.listenForIncomingNotifications();
   }
 
-  // Check notification permissions
-  async checkNotificationPermissions(): Promise<PermissionStatus> {
-    const permissions = await LocalNotifications.checkPermissions();
-    console.log('Current permissions:', permissions);
-    return permissions;
-  }
-
-  // Request notification permissions
   async requestNotificationPermissions(): Promise<PermissionStatus> {
-    const permissions = await LocalNotifications.requestPermissions();
-    console.log('Updated permissions:', permissions);
-    return permissions;
+    return await LocalNotifications.requestPermissions();
   }
 
-  // Create a notification
-  async scheduleNotification(notification: LocalNotificationSchema) {
-    this.defaultTimeZone = getDefaultTimezone();
+  async listenForIncomingNotifications() {
+    LocalNotifications.addListener(
+      'localNotificationReceived',
+      async (notification) => {
+        try {
+          await Haptics.vibrate();
+        } catch (e) {
+          console.warn('Haptics failed:', e);
+        }
+        this.displayInAppNotification(notification);
+      }
+    );
+  }
 
-    // Ensure permissions are granted
-    const permissions = await this.checkNotificationPermissions();
-    if (permissions.display !== 'granted') {
-      console.log('Notification permissions not granted. Requesting...');
-      await this.requestNotificationPermissions();
+  async checkNotificationPermissions(): Promise<PermissionStatus> {
+    return LocalNotifications.checkPermissions();
+  }
+
+  async scheduleNotification(
+    notification: LocalNotificationSchema,
+    exact: boolean = false
+  ) {
+    const perm = await LocalNotifications.checkPermissions();
+    if (perm.display !== 'granted') {
+      await LocalNotifications.requestPermissions();
     }
 
-    // For Android, make sure to set the channelId
     if (this.platform.is('android')) {
-      notification = {
-        ...notification,
-        channelId: 'pomodoro-notifications',
-        sound: 'notification.wav'
-      };
+      notification.channelId = this.CHANNEL_ID;
     }
 
-    try {
-      await LocalNotifications.schedule({
-        notifications: [notification],
-      });
-      console.log('Notification scheduled:', notification);
-    } catch (error) {
-      console.error('Error scheduling notification:', error);
+    const scheduleOpts: any = {
+      notifications: [notification]
+    };
+    if (exact) {
+      scheduleOpts.allowWhileIdle = true;
     }
+
+    await LocalNotifications.schedule(scheduleOpts);
   }
 
-  // Read all pending notifications
+  async playWorkCompleteSound() {
+    await this.scheduleNotification({
+      id: Math.random() * 10000 | 0,
+      title: 'Pomodoro Completed',
+      body: 'Time for a 5-minute break!',
+      ongoing: false,
+      autoCancel: true
+    }, true);
+  }
+
+  async playBreakCompleteSound() {
+    await this.scheduleNotification({
+      id: Math.random() * 10000 | 0,
+      title: 'Break Completed',
+      body: 'Ready for the next Pomodoro?',
+      ongoing: false,
+      autoCancel: true
+    }, true);
+  }
+
   async getPendingNotifications(): Promise<ScheduleResult> {
-    const pending = await LocalNotifications.getPending();
-    console.log('Pending notifications:', pending);
-    return pending;
+    return LocalNotifications.getPending();
   }
 
-  // Update a notification
-  async updateNotification(id: number, updatedNotification: LocalNotificationSchema) {
-    await LocalNotifications.cancel({ notifications: [{ id }] });
-    await this.scheduleNotification(updatedNotification);
-    console.log(`Notification with ID ${id} updated.`);
-  }
-
-  // Delete a notification
   async cancelNotification(id: number) {
     await LocalNotifications.cancel({ notifications: [{ id }] });
-    console.log(`Notification with ID ${id} canceled.`);
   }
 
-  // Listen for incoming notifications
-  listenForIncomingNotifications() {
-    LocalNotifications.addListener('localNotificationReceived', (notification) => {
-      console.log('Notification received:', notification);
-      this.displayInAppNotification(notification);
-    });
+  async updateNotification(id: number, updated: LocalNotificationSchema) {
+    await LocalNotifications.cancel({ notifications: [{ id }] });
+    updated.id = id;
+    await this.scheduleNotification(updated);
   }
 
   async displayInAppNotification(notification: any) {
@@ -124,15 +138,8 @@ export class NotificationService {
       header: notification.title,
       message: notification.body,
       position: 'top',
-      duration: 5000,
+      duration: 3000,
       color: 'dark',
-      cssClass: 'notification-toast',
-      buttons: [
-        {
-          text: 'OK',
-          role: 'cancel'
-        }
-      ]
     });
     await toast.present();
   }

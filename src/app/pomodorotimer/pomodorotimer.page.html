@@ -3,20 +3,11 @@
     <div class="current-time">
       {{ currentTime }}
     </div>
-    <!-- App title -->
     <div class="app-title">
       <h1>flocus</h1>
       <p class="quote">"When you feel like quitting, think<br>about why you started"</p>
     </div>
 
-    <!-- Timer status indicator -->
-    <div class="timer-status" *ngIf="timerState !== 'idle'">
-      <div class="status-badge" [ngClass]="{'work-badge': isWorkSession(), 'break-badge': isBreakSession()}">
-        {{ isWorkSession() ? '' : 'BREAK TIME' }}
-      </div>
-    </div>
-
-    <!-- Timer circle -->
     <div class="timer-circle" [ngClass]="{
       'work': isWorkSession(),
       'break': isBreakSession(),

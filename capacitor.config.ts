@@ -8,13 +8,16 @@ const config: CapacitorConfig = {
     LocalNotifications: {
       smallIcon: "ic_stat_notification",
       iconColor: "#FF0000",
-      sound: "notification.wav",
+      // Do not set sound here for Android 11 - it needs to be set in the channel
     },
     Haptics: {
       impact: {
         style: "heavy"
       }
     }
+  },
+  android: {
+    allowMixedContent: true
   },
   server: {
     androidScheme: "https"
