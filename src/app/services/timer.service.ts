@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { NotificationService } from './notification.service';
-import { Platform } from '@ionic/angular';
-import { ToastController } from '@ionic/angular';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 export enum TimerState {
@@ -84,7 +82,6 @@ export class TimerService {
   }
 
   private async handleTimerComplete() {
-    console.log('Timer complete, current state:', this.timerState.value);
     this.clearTimer();
 
     try {
@@ -104,13 +101,11 @@ export class TimerService {
     }
   }
 
-
   private clearTimer() {
     if (this.timerId) {
       clearInterval(this.timerId);
       this.timerId = null;
       this.isRunning.next(false);
-      console.log('Timer cleared');
     }
   }
 
